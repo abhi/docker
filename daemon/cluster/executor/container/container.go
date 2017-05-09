@@ -3,12 +3,11 @@ package container
 import (
 	"errors"
 	"fmt"
+	"github.com/Sirupsen/logrus"
 	"net"
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/Sirupsen/logrus"
 
 	"github.com/docker/distribution/reference"
 	"github.com/docker/docker/api/types"
@@ -479,13 +478,16 @@ func getEndpointConfig(na *api.NetworkAttachment) *network.EndpointSettings {
 		}
 	}
 
-	return &network.EndpointSettings{
+	epSettings := &network.EndpointSettings{
 		NetworkID: na.Network.ID,
 		IPAMConfig: &network.EndpointIPAMConfig{
 			IPv4Address: ipv4,
 			IPv6Address: ipv6,
 		},
+		Aliases:    na.Aliases,
+		DriverOpts: na.DriverOpt,
 	}
+	return epSettings
 }
 
 func (c *containerConfig) virtualIP(networkID string) string {

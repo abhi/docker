@@ -13,6 +13,21 @@ type IPAM struct {
 	Config  []IPAMConfig
 }
 
+//Options represents the network options for endpoint creation
+type Options struct {
+	Target    string
+	Aliases   []string
+	DriverOpt map[string]string
+}
+
+//Copy makes a copy of options
+func (o *Options) Copy() *Options {
+	optCopy := *o
+	optCopy.Aliases = make([]string, 0, len(o.Aliases))
+	optCopy.Aliases = append(optCopy.Aliases, o.Aliases...)
+	return &optCopy
+}
+
 // IPAMConfig represents IPAM configurations
 type IPAMConfig struct {
 	Subnet     string            `json:",omitempty"`
@@ -58,6 +73,7 @@ type EndpointSettings struct {
 	GlobalIPv6Address   string
 	GlobalIPv6PrefixLen int
 	MacAddress          string
+	DriverOpts          map[string]string
 }
 
 // Task carries the information about one backend task

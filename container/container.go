@@ -644,7 +644,11 @@ func (container *Container) BuildJoinOptions(n libnetwork.Network) ([]libnetwork
 			}
 			joinOptions = append(joinOptions, libnetwork.CreateOptionAlias(name, alias))
 		}
+		for k, v := range epConfig.DriverOpts {
+			joinOptions = append(joinOptions, libnetwork.EndpointOptionGeneric(options.Generic{k: v}))
+		}
 	}
+
 	return joinOptions, nil
 }
 
@@ -742,6 +746,10 @@ func (container *Container) BuildCreateEndpointOptions(n libnetwork.Network, epC
 
 			createOptions = append(createOptions, libnetwork.EndpointOptionGeneric(genericOption))
 		}
+		for k, v := range epConfig.DriverOpts {
+			createOptions = append(createOptions, libnetwork.EndpointOptionGeneric(options.Generic{k: v}))
+		}
+
 	}
 
 	// Port-mapping rules belong to the container & applicable only to non-internal networks

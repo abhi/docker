@@ -1,7 +1,7 @@
 package opts
 
 import (
-	"github.com/docker/docker/api/types/swarm"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/pkg/testutil"
 	"github.com/stretchr/testify/assert"
 	"strings"
@@ -11,11 +11,11 @@ import (
 func TestNetworkOptLegacySyntax(t *testing.T) {
 	testCases := []struct {
 		value    string
-		expected []swarm.NetworkAttachmentConfig
+		expected []network.Options
 	}{
 		{
 			value: "docknet1",
-			expected: []swarm.NetworkAttachmentConfig{
+			expected: []network.Options{
 				{
 					Target: "docknet1",
 				},
@@ -35,29 +35,36 @@ func TestNetworkOptLegacySyntax(t *testing.T) {
 func TestNetworkOptCompleteSyntax(t *testing.T) {
 	testCases := []struct {
 		value    string
-		expected []swarm.NetworkAttachmentConfig
+		expected []network.Options
 	}{
 		{
-			value: "name=docknet1,alias=web",
-			expected: []swarm.NetworkAttachmentConfig{
+			value: "name=docknet1,alias=web,driver-opt=field1=value1",
+			expected: []network.Options{
 				{
 					Target:  "docknet1",
 					Aliases: []string{"web"},
+					DriverOpt: map[string]string{
+						"field1": "value1",
+					},
 				},
 			},
 		},
 		{
-			value: "name=docknet1,alias=web1,alias=web2",
-			expected: []swarm.NetworkAttachmentConfig{
+			value: "name=docknet1,alias=web1,alias=web2,driver-opt=field1=value1,driver-opt=field2=value2",
+			expected: []network.Options{
 				{
 					Target:  "docknet1",
 					Aliases: []string{"web1", "web2"},
+					DriverOpt: map[string]string{
+						"field1": "value1",
+						"field2": "value2",
+					},
 				},
 			},
 		},
 		{
 			value: "name=docknet1",
-			expected: []swarm.NetworkAttachmentConfig{
+			expected: []network.Options{
 				{
 					Target:  "docknet1",
 					Aliases: []string{},
@@ -88,6 +95,10 @@ func TestNetworkOptInvalidSyntax(t *testing.T) {
 			value:         "network=docknet1,invalid=web",
 			expectedError: "invalid field",
 		},
+		{
+			value:         "driver-opt=field1=value1,driver-opt=field2=value2",
+			expectedError: "network name/id is not specified",
+		},
 	}
 	for _, tc := range testCases {
 		var network NetworkOpt
@@ -95,7 +106,7 @@ func TestNetworkOptInvalidSyntax(t *testing.T) {
 	}
 }
 
-func verifyNetworkOpt(t *testing.T, netConfigs []swarm.NetworkAttachmentConfig, expected swarm.NetworkAttachmentConfig) {
+func verifyNetworkOpt(t *testing.T, netConfigs []network.Options, expected network.Options) {
 	var contains = false
 	for _, netConfig := range netConfigs {
 		if netConfig.Target == expected.Target {
