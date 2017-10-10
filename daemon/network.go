@@ -180,6 +180,7 @@ func (daemon *Daemon) setupIngress(create *clustertypes.NetworkCreateRequest, ip
 	n, err := daemon.GetNetworkByID(create.ID)
 	if err != nil {
 		logrus.Errorf("Failed getting ingress network by id after creating: %v", err)
+		return
 	}
 
 	if err = daemon.createLoadBalancerSandbox("ingress", create.ID, ip, n, libnetwork.OptionIngress()); err != nil {
