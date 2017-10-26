@@ -674,24 +674,38 @@ func (sb *sandbox) SetKey(basePath string) error {
 	return nil
 }
 
-func (sb *sandbox) EnableService() error {
+// EnableService enables the service for all endpoints in a sandbox.
+// It returns an error if there is a failure in enabling service on
+// any endpoints in a sandbox. The assumption here is that the caller
+// will handle the error appropriately.
+
+func (sb *sandbox) EnableService() (err error) {
 	logrus.Debugf("EnableService %s START", sb.containerID)
 	for _, ep := range sb.getConnectedEndpoints() {
-		if ep.enableService(true) {
+		if !ep.isServiceEnabled() {
 			if err := ep.addServiceInfoToCluster(sb); err != nil {
-				ep.enableService(false)
-				return fmt.Errorf("could not update state for endpoint %s into cluster: %v", ep.Name(), err)
+				return fmt.Errorf("failed to add service info for endpoint %s into cluster: %v", ep.Name(), err)
 			}
+			// enable service on the endpoint copy in the sandbox
+			ep.enableService(true)
 		}
 	}
 	logrus.Debugf("EnableService %s DONE", sb.containerID)
 	return nil
 }
 
-func (sb *sandbox) DisableService() error {
+// DisableService disables service on a sandbox.
+// There is no error returned midway if there is a failure
+// hit for an endpoint while disabling the service.
+func (sb *sandbox) DisableService() (err error) {
 	logrus.Debugf("DisableService %s START", sb.containerID)
 	for _, ep := range sb.getConnectedEndpoints() {
-		ep.enableService(false)
+		if ep.isServiceEnabled() {
+			if err := ep.deleteServiceInfoFromCluster(sb, "DisableService"); err != nil {
+				logrus.Warnf("failed update state for endpoint %s into cluster: %v", ep.Name(), err)
+			}
+			ep.enableService(false)
+		}
 	}
 	logrus.Debugf("DisableService %s DONE", sb.containerID)
 	return nil

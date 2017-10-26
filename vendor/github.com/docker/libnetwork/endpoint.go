@@ -759,10 +759,6 @@ func (ep *endpoint) sbLeave(sb *sandbox, force bool, options ...EndpointOption) 
 		return err
 	}
 
-	if e := ep.deleteServiceInfoFromCluster(sb, "sbLeave"); e != nil {
-		logrus.Errorf("Could not delete service state for endpoint %s from cluster: %v", ep.Name(), e)
-	}
-
 	if e := ep.deleteDriverInfoFromCluster(); e != nil {
 		logrus.Errorf("Could not delete endpoint state for endpoint %s from cluster: %v", ep.Name(), e)
 	}
@@ -1203,4 +1199,13 @@ func (c *controller) cleanupLocalEndpoints() {
 			n.getEpCnt().setCnt(uint64(len(epl)))
 		}
 	}
+}
+
+
+// isServiceEnabled checks if service is enabled for the
+// endpoint
+func (ep *endpoint) isServiceEnabled() bool {
+	ep.Lock()
+	defer ep.Unlock()
+	return ep.serviceEnabled
 }

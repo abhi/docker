@@ -222,13 +222,20 @@ func (r *controller) Start(ctx context.Context) error {
 
 			switch event.Action {
 			case "die": // exit on terminal events
+                                if r.hasServiceBinding() {
+                                        if err := r.adapter.deactivateServiceBinding(); err != nil {
+                                                log.G(ctx).WithError(err).Warningf("failed to deactivate service binding for container %s", r.adapter.container.name())
+                                                // Don't return an error here, because failure to deactivate
+                                                // the service binding is expected if the container was never
+                                                // started.
+                                        }
+                                }
 				ctnr, err := r.adapter.inspect(ctx)
 				if err != nil {
 					return errors.Wrap(err, "die event received")
 				} else if ctnr.State.ExitCode != 0 {
 					return &exitError{code: ctnr.State.ExitCode, cause: healthErr}
 				}
-
 				return nil
 			case "destroy":
 				// If we get here, something has gone wrong but we want to exit

@@ -831,6 +831,13 @@ func (daemon *Daemon) disconnectFromNetwork(container *container.Container, n li
 	}
 	n.WalkEndpoints(s)
 
+	if !container.Managed {
+		// remove container name/alias to DNS
+		if err := daemon.DeactivateContainerServiceBinding(container.Name); err != nil {
+			logrus.Errorf("Deactivate container service binding for %s failed: %v", container.Name, err)
+		}
+	}
+
 	if ep == nil && force {
 		epName := strings.TrimPrefix(container.Name, "/")
 		ep, err := n.EndpointByName(epName)
